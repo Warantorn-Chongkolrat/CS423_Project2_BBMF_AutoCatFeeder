@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <base target="_top">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+      body { background-color: #f0f2f5; font-family: 'Segoe UI', sans-serif; }
+      .card { border: none; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.08); margin-bottom: 15px; }
+      .status-on { color: #2ecc71; font-weight: bold; }
+      .status-off { color: #e74c3c; font-weight: bold; }
+      .data-val { font-size: 1.8rem; font-weight: bold; color: #1a73e8; }
+      .level-normal { color: #2ecc71 !important; }
+      .level-low { color: #e74c3c !important; }
+      .portion-val { color: #f39c12 !important; }
+    </style>
+  </head>
+  <body>
+    <div class="container py-4">
+      <h2 class="text-center mb-4">🐾 Cat Feeder Dashboard</h2>
+      
+      <div class="row">
+        <div class="col-md-4">
+          <div class="card text-center p-3 h-100 border-info">
+            <h5>Auto Feeder: <span id="autoModeStatus">...</span></h5>
+            <div class="d-grid gap-2 mt-2">
+              <button id="btnAutoToggle" class="btn btn-outline-info" onclick="toggleAutoMode()">Toggle Auto</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card text-center p-3 h-100">
+            <h5>Manual Feed: <span id="servoStatus">...</span></h5>
+            <div class="d-grid gap-2 mt-2">
+              <button id="btnToggle" class="btn btn-primary" onclick="toggleServo()">Toggle Feed</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="col-md-4">
+          <div class="card text-center p-3 h-100">
+            <h5>Portions Fed (Today)</h5>
+            <div class="data-val portion-val"><span id="portions">0</span> <small>portions</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-md-6">
+          <div class="card text-center p-3 h-100 border-success">
+            <h6 class="text-success">Recommended Calories</h6>
+            <div class="data-val"><span id="recCal">-</span> <small>kcal/day</small></div>
+          </div>
+        </div>
+        
+        <div class="col-md-6">
+          <div class="card text-center p-3 h-100 border-warning">
+            <h6 class="text-warning">Daily Food Quota</h6>
+            <div class="data-val"><span id="dailyQuota">-</span> <small>portions</small></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="row mt-3">
+        <div class="col-md-4">
+          <div class="card p-3 text-center">
+            <h6>Food Level</h6>
+            <div class="data-val" id="foodLevel">-</div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-3 text-center">
+            <h6>Cat Distance</h6>
+            <div class="data-val"><span id="catDist">0</span> <small>cm</small></div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="card p-3 text-center">
+            <h6>Food Weight</h6>
+            <div class="data-val"><span id="weight">0</span> <small>g</small></div>
+          </div>
+        </div>
+      </div>
+      <div class="card p-4 mt-4 border-primary">
+        <h4 class="mb-3 text-primary">🐈 Cat Profile Setup</h4>
+        
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <label class="form-label fw-bold">Cat Weight (kg)</label>
+            <input type="number" id="catWeightInp" class="form-control" step="0.1" placeholder="e.g. 4.5">
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <label class="form-label fw-bold">Gender</label>
+            <select id="catGenderInp" class="form-select">
+              <option value="Male">Male</option>
+              <option value="Female">Female</option>
+            </select>
+          </div>
+          
+          <div class="col-md-4 mb-3">
+            <label class="form-label fw-bold">Neutered?</label>
+            <select id="catNeuteredInp" class="form-select">
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <label class="form-label fw-bold text-success">Food Cal (kcal/g)</label>
+            <input type="number" id="catFoodCalInp" class="form-control" step="0.1" placeholder="e.g. 3.8">
+          </div>
+        <div class="mb-3 mt-2">
+          <label class="form-label fw-bold fs-5">
+            Body Condition Score (1-9): 
+            <span id="bcsValue" class="text-danger fs-3 ms-2">5</span>
+          </label>
+          <div class="d-flex justify-content-between px-2 mb-1 fw-bold text-secondary" style="font-size: 0.9rem;">
+            <span>1</span><span>2</span><span>3</span><span>4</span><span>5</span><span>6</span><span>7</span><span>8</span><span>9</span>
+          </div>
+          <input type="range" class="form-range" min="1" max="9" step="1" id="catBcsInp" value="5" 
+                 oninput="document.getElementById('bcsValue').innerText = this.value">
+          <div class="text-center mt-4 p-3 bg-white rounded shadow-sm">
+            <img src="https://i.postimg.cc/pTv64Ybk/Catster-Body-Condition-Score-for-Cats-v1-4-Jun-6-2024-jpg.webp" 
+                 alt="Body Condition Score Chart" class="img-fluid rounded" style="max-height: 400px; width: auto;">
+          </div>
+        </div>
+        <button class="btn btn-primary btn-lg w-100 mt-3" id="btnSaveProfile" onclick="saveProfile()">
+          💾 Save Cat Profile
+        </button>
+      </div>
+      <p class="text-center text-muted mt-3">Last Update: <span id="lastUpdate">-</span></p>
+    </div>
+
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1100;">
+      
+      <div id="feedToast" class="toast align-items-center text-white bg-success border-0 shadow-lg mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fs-5 fw-bold" id="toastMsg">
+            <i class="bi bi-info-circle me-2"></i> Feeding started!
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <div id="foodLeftToast" class="toast align-items-center text-dark bg-warning border-0 shadow-lg mb-2" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-bold">
+            ⚠️ Sensor triggered but there's still food left in the bowl.
+          </div>
+          <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+
+      <div id="autoOffToast" class="toast align-items-center text-white bg-secondary border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="d-flex">
+          <div class="toast-body fw-bold">
+            🚫 Auto Mode is OFF. Sensor triggered but ignoring feed.
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+      </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      let lastServoStatus = "OFF";
+      let isFirstLoad = true;
+      let isFoodLeftAlertShown = false; 
+      let isAutoOffAlertShown = false; // ตัวแปรสำหรับเช็กแจ้งเตือน Auto OFF
+
+      function loadData() {
+        google.script.run.withSuccessHandler(function(data) {
+          document.getElementById('portions').innerText = data.portions;
+          const fLevel = document.getElementById('foodLevel');
+          const distValue = parseFloat(data.foodDist);
+          if (distValue < 15.5) {
+            fLevel.innerText = "Normal"; fLevel.className = "data-val level-normal";
+          } else {
+            fLevel.innerText = "Low"; fLevel.className = "data-val level-low";
+          }
+
+          document.getElementById('catDist').innerText = data.catDist;
+          document.getElementById('weight').innerText = data.weight;
+          document.getElementById('lastUpdate').innerText = data.time;
+          document.getElementById('recCal').innerText = data.profile.recCal;
+          document.getElementById('dailyQuota').innerText = data.profile.quota;
+          
+          const sStatus = document.getElementById('servoStatus');
+          sStatus.innerText = data.servo;
+          sStatus.className = (data.servo === 'ON') ? 'status-on' : 'status-off';
+          
+          const btn = document.getElementById('btnToggle');
+          btn.innerText = (data.servo === 'ON') ? 'Stop (OFF)' : 'Feed Now (ON)';
+          btn.className = (data.servo === 'ON') ? 'btn btn-danger' : 'btn btn-success';
+
+          const autoStatus = document.getElementById('autoModeStatus');
+          autoStatus.innerText = data.autoMode;
+          autoStatus.className = (data.autoMode === 'ON') ? 'status-on' : 'status-off';
+
+          const btnAuto = document.getElementById('btnAutoToggle');
+          btnAuto.innerText = (data.autoMode === 'ON') ? 'Turn OFF Auto Mode' : 'Turn ON Auto Mode';
+          btnAuto.className = (data.autoMode === 'ON') ? 'btn btn-outline-danger' : 'btn btn-outline-success';
+
+          if (isFirstLoad && data.profile.weight !== "") {
+            document.getElementById('catWeightInp').value = data.profile.weight;
+            document.getElementById('catGenderInp').value = data.profile.gender;
+            document.getElementById('catNeuteredInp').value = data.profile.neutered;
+            document.getElementById('catFoodCalInp').value = data.profile.foodCal;
+            document.getElementById('catBcsInp').value = data.profile.bcs;
+            document.getElementById('bcsValue').innerText = data.profile.bcs;
+            isFirstLoad = false; 
+          }
+
+          if (lastServoStatus === 'OFF' && data.servo === 'ON') {
+            document.getElementById('toastMsg').innerText = `Feeding started! (${data.portions}/${data.profile.quota})`;
+            const toast = new bootstrap.Toast(document.getElementById('feedToast'));
+            toast.show();
+          }
+          lastServoStatus = data.servo;
+
+          if (data.pendingConfirm === "PENDING_AUTO") {
+            google.script.run.clearPendingState(); 
+            if (confirm("Your cat's food quota has been reached, are you sure you want to dispense another portion?")) {
+              document.getElementById('btnToggle').disabled = true;
+              google.script.run.withSuccessHandler(function() {
+                loadData();
+                document.getElementById('btnToggle').disabled = false;
+              }).updateServoFromWeb("ON");
+            }
+          }
+
+          const cDist = parseFloat(data.catDist);
+          const w = parseFloat(data.weight);
+          
+          // ตรวจสอบอาหารเหลือ
+          if (cDist > 0 && cDist < 20 && w > 2) {
+            if (!isFoodLeftAlertShown) {
+              const warningToast = new bootstrap.Toast(document.getElementById('foodLeftToast'));
+              warningToast.show();
+              isFoodLeftAlertShown = true; 
+            }
+          } else if (cDist >= 20 || cDist === 0) {
+            isFoodLeftAlertShown = false;
+          }
+
+          // --- ส่วนที่เพิ่มใหม่: แจ้งเตือนเมื่อโหมด Auto ปิดอยู่แต่แมวเดินเข้ามาใกล้ (น้ำหนักชามต้องน้อยกว่า 2 ด้วยตามเงื่อนไข ESP32) ---
+          if (data.autoMode === 'OFF' && cDist > 0 && cDist < 30 && w < 2) {
+            if (!isAutoOffAlertShown) {
+              const autoOffToast = new bootstrap.Toast(document.getElementById('autoOffToast'));
+              autoOffToast.show();
+              isAutoOffAlertShown = true;
+            }
+          } else if (cDist >= 30 || cDist === 0) {
+            isAutoOffAlertShown = false; // รีเซ็ตการแจ้งเตือนเมื่อแมวเดินออกไป
+          }
+
+        }).getLatestData();
+      }
+
+      function toggleAutoMode() {
+        const currentStatus = document.getElementById('autoModeStatus').innerText;
+        const newState = (currentStatus === 'ON') ? 'OFF' : 'ON';
+        document.getElementById('btnAutoToggle').disabled = true;
+        
+        google.script.run.withSuccessHandler(function() {
+          loadData();
+          document.getElementById('btnAutoToggle').disabled = false;
+        }).updateAutoModeFromWeb(newState);
+      }
+
+      function toggleServo() {
+        const currentStatus = document.getElementById('servoStatus').innerText;
+        const portions = Number(document.getElementById('portions').innerText);
+        const quota = Number(document.getElementById('dailyQuota').innerText);
+        const newState = (currentStatus === 'ON') ? 'OFF' : 'ON';
+
+        if (newState === 'ON' && !isNaN(quota) && portions >= quota) {
+          if (!confirm("Your cat's food quota has been reached, are you sure you want to dispense another portion?")) return; 
+        }
+
+        document.getElementById('btnToggle').disabled = true;
+        google.script.run.withSuccessHandler(function() {
+          loadData();
+          document.getElementById('btnToggle').disabled = false;
+        }).updateServoFromWeb(newState);
+      }
+
+      function saveProfile() {
+        var weightVal = document.getElementById('catWeightInp').value;
+        var foodCalVal = document.getElementById('catFoodCalInp').value; 
+        if(!weightVal || !foodCalVal) {
+          alert("Please enter both Cat Weight and Food Calories."); return;
+        }
+        var profileData = {
+          weight: weightVal, gender: document.getElementById('catGenderInp').value,
+          neutered: document.getElementById('catNeuteredInp').value,
+          bcs: document.getElementById('catBcsInp').value, foodCal: foodCalVal 
+        };
+        var btn = document.getElementById('btnSaveProfile');
+        btn.innerText = "🧠 AI is analyzing..."; btn.disabled = true;
+        google.script.run.withSuccessHandler(function(responseMessage) {
+          alert(responseMessage);
+          isFirstLoad = true; 
+          loadData();
+          btn.innerText = "💾 Save Cat Profile"; btn.disabled = false;
+        }).saveCatProfile(profileData);
+      }
+
+      setInterval(loadData, 3000);
+      window.onload = loadData;
+    </script>
+  </body>
+</html>
